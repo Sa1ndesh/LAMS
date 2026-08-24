@@ -1,0 +1,140 @@
+services:
+  # =====================================================================
+  # 1. Database - PostgreSQL + PostGIS
+  # =====================================================================
+  database:
+    image: postgis/postgis:16-3.4
+    container_name: lams_database
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lams}
+      POSTGRES_USER: ${POSTGRES_USER:-lams_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lams_password_2026}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    ports:
+      - "5432:5432"
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-lams_user} -d ${POSTGRES_DB:-lams}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+    networks:
+      - lams_network
+
+
+  # =====================================================================
+  # 2. Backend - FastAPI
+  # =====================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    image: lams-backend:latest
+    container_name: lams_backend
+    restart: unless-stopped
+
+    environment:
+      APPLICATION_ENV: ${APPLICATION_ENV:-production}
+      DEBUG: ${DEBUG:-false}
+
+      DATABASE_URL: >-
+        postgresql+asyncpg://${POSTGRES_USER:-lams_user}:${POSTGRES_PASSWORD:-lams_password_2026}@database:5432/${POSTGRES_DB:-lams}
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-CHANGE_THIS_SECRET_IN_PRODUCTION}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5173}
+
+      LAMS_STORAGE_PATH: /app/storage
+
+    volumes:
+      - lams_storage:/app/storage
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      database:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://127.0.0.1:8000/api/health || exit 1"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+    networks:
+      - lams_network
+
+
+  # =====================================================================
+  # 3. Frontend - React + Nginx
+  # =====================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+
+    image: lams-frontend:latest
+    container_name: lams_frontend
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://127.0.0.1:80/ || exit 1"
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+    networks:
+      - lams_network
+
+
+# =====================================================================
+# Persistent Volumes
+# =====================================================================
+volumes:
+  postgres_data:
+    driver: local
+
+  lams_storage:
+    driver: local
+
+
+# =====================================================================
+# Network
+# =====================================================================
+networks:
+  lams_network:
+    driver: bridge
