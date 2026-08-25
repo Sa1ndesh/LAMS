@@ -2,9 +2,9 @@
 
 const getEnvApiUrl = (): string => {
   try {
-    return (import.meta as unknown as { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL || 'http://localhost:8000';
+    return (import.meta as unknown as { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL || 'https://lams-production-1a83.up.railway.app';
   } catch {
-    return 'http://localhost:8000';
+    return 'https://lams-production-1a83.up.railway.app';
   }
 };
 
