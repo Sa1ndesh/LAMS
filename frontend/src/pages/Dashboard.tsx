@@ -33,9 +33,13 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
+import { useAuthContext } from '../context/AuthContext';
+import { Shield } from 'lucide-react';
+
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { projects } = useApp();
+  const { role } = useAuthContext();
 
   const [summaryData, setSummaryData] = useState<AnalyticsSummaryData | null>(null);
   const [landData, setLandData] = useState<LandAnalyticsResponseData | null>(null);
@@ -147,11 +151,47 @@ export const Dashboard: React.FC = () => {
     },
   ];
 
+  // Filter projects based on active user role perspective
+  const filteredProjects = React.useMemo(() => {
+    if (role === 'SUPER_ADMIN') return projects;
+    if (role === 'STATE_AUTHORITY') return projects.filter(p => p.state === 'Uttar Pradesh' || p.state === 'Tamil Nadu');
+    if (role === 'DISTRICT_ADMIN') return projects.filter(p => p.district === 'Lucknow' || p.district === 'Gautam Buddha Nagar');
+    if (role === 'LAND_ACQUISITION_OFFICER') return projects.filter(p => p.currentStage === 'Survey' || p.currentStage === 'Notification' || p.currentStage === 'Verification');
+    if (role === 'FIELD_OFFICER') return projects.filter(p => p.currentStage === 'Survey' || p.currentStage === 'Possession');
+    if (role === 'VIEWER') return projects;
+    return projects;
+  }, [projects, role]);
+
   return (
     <PageContainer
       title="National Executive Dashboard"
       description="Central Monitoring Platform for Infrastructure Land Acquisition & Resettlement in India"
     >
+      {/* Role Perspective Banner */}
+      <div className="bg-slate-900 border border-sky-500/30 rounded-lg p-3 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-sky-500/10 rounded-md border border-sky-500/20 text-sky-400">
+            <Shield className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              Active Role Scope: <span className="text-sky-300 font-mono bg-sky-950 px-2 py-0.5 rounded border border-sky-500/40">{role}</span>
+            </div>
+            <div className="text-[11px] text-slate-300 mt-0.5">
+              {role === 'SUPER_ADMIN' && 'Full National Administrative Access • All 5 Infrastructure Projects across India'}
+              {role === 'STATE_AUTHORITY' && 'State Level Oversight • Filtered to Uttar Pradesh & Tamil Nadu State Projects'}
+              {role === 'DISTRICT_ADMIN' && 'District Collectorate Oversight • Filtered to Lucknow & Gautam Buddha Nagar Projects'}
+              {role === 'LAND_ACQUISITION_OFFICER' && 'Land Acquisition Officer (LAO) • Active Survey, Notification & Award Clearance'}
+              {role === 'FIELD_OFFICER' && 'Field Survey Inspector • Ground Survey & Possession Verification Scope'}
+              {role === 'VIEWER' && 'Public Read-Only Observer • All Data Mutations & Administrative Action Buttons Disabled'}
+            </div>
+          </div>
+        </div>
+        <div className="text-[11px] text-slate-400 bg-slate-850 px-2.5 py-1 rounded border border-slate-700/60 shrink-0 font-mono">
+          Showing {filteredProjects.length} of {projects.length} Projects
+        </div>
+      </div>
+
       {/* 8 Dynamic Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, idx) => (
@@ -242,8 +282,8 @@ export const Dashboard: React.FC = () => {
       </Card>
 
       {/* Priority Projects Table */}
-      <Card title="National Priority Infrastructure Projects">
-        <Table data={projects} columns={columns} keyExtractor={(row) => row.id} />
+      <Card title={`Role Scope Projects (${filteredProjects.length})`}>
+        <Table data={filteredProjects} columns={columns} keyExtractor={(row) => row.id} />
       </Card>
     </PageContainer>
   );

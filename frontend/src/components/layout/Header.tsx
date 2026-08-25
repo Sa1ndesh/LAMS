@@ -12,7 +12,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const navigate = useNavigate();
   const { currentUser, setCurrentUserRole, notifications, markNotificationAsRead, markAllNotificationsAsRead } = useApp();
-  const { logout, user: authUser, setUserRole } = useAuthContext();
+  const { logout, user: authUser, role, setUserRole } = useAuthContext();
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
 
@@ -153,17 +153,25 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               <UserIcon className="h-4 w-4" />
             </div>
             <div className="text-left">
-              <div className="text-xs font-semibold text-white leading-tight">{authUser?.name || currentUser.fullName}</div>
+              <div className="text-xs font-semibold text-white leading-tight">
+                {role === 'SUPER_ADMIN' && 'National Super Admin'}
+                {role === 'STATE_AUTHORITY' && 'State Land Authority'}
+                {role === 'DISTRICT_ADMIN' && 'District Collector (Lucknow)'}
+                {role === 'LAND_ACQUISITION_OFFICER' && 'Land Acquisition Officer (LAO)'}
+                {role === 'FIELD_OFFICER' && 'Field Survey Officer'}
+                {role === 'VIEWER' && 'Public Observer (Read-Only)'}
+              </div>
               <select
-                value={currentUser.role}
+                value={role}
                 onChange={(e) => handleRoleChange(e.target.value as UserRole)}
-                className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-sky-300 font-medium focus:outline-none mt-0.5"
+                className="bg-slate-900 border border-slate-700 rounded px-2 py-0.5 text-[11px] text-sky-300 font-semibold focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer mt-0.5"
               >
-                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                <option value="LAND_ACQUISITION_OFFICER">LAO_OFFICER</option>
-                <option value="DISTRICT_ADMIN">DISTRICT_ADMIN</option>
-                <option value="FIELD_OFFICER">FIELD_OFFICER</option>
-                <option value="VIEWER">VIEWER</option>
+                <option value="SUPER_ADMIN">👑 SUPER_ADMIN</option>
+                <option value="STATE_AUTHORITY">🏛️ STATE_AUTHORITY</option>
+                <option value="DISTRICT_ADMIN">🏢 DISTRICT_ADMIN</option>
+                <option value="LAND_ACQUISITION_OFFICER">📜 LAO_OFFICER</option>
+                <option value="FIELD_OFFICER">🔍 FIELD_OFFICER</option>
+                <option value="VIEWER">👁️ VIEWER</option>
               </select>
             </div>
           </div>
