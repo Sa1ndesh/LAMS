@@ -303,20 +303,20 @@ async def seed_all():
         ]
         acq_statuses = [
             ParcelAcquisitionStatusEnum.ACQUIRED,
-            ParcelAcquisitionStatusEnum.IN_PROGRESS,
+            ParcelAcquisitionStatusEnum.SURVEYED,
             ParcelAcquisitionStatusEnum.PROPOSED,
-            ParcelAcquisitionStatusEnum.DISPUTED,
+            ParcelAcquisitionStatusEnum.NOTIFIED,
         ]
         comp_statuses = [
             CompensationStatusEnum.DISBURSED,
-            CompensationStatusEnum.PARTIALLY_DISBURSED,
+            CompensationStatusEnum.APPROVED,
             CompensationStatusEnum.APPROVED,
             CompensationStatusEnum.ASSESSED,
             CompensationStatusEnum.PENDING,
         ]
         poss_statuses = [
             PossessionStatusEnum.TAKEN,
-            PossessionStatusEnum.PARTIAL,
+            PossessionStatusEnum.DEMARCATED,
             PossessionStatusEnum.NOT_TAKEN,
         ]
 
@@ -354,7 +354,7 @@ async def seed_all():
                     possession_status=poss_status,
                     latitude=center_lat,
                     longitude=center_lon,
-                    geometry=text(f"ST_GeomFromText('{wkt_poly}', 4326)"),
+                    geometry=wkt_poly,
                 )
                 session.add(parcel)
                 await session.flush()
