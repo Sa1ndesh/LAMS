@@ -21,9 +21,19 @@ def upgrade() -> None:
     dialect_name = bind.dialect.name
 
     if dialect_name == "postgresql":
-        op.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
-        op.execute("ALTER TABLE land_parcels ADD COLUMN IF NOT EXISTS geometry geometry(Polygon, 4326);")
-        op.execute("CREATE INDEX IF NOT EXISTS idx_land_parcels_geometry ON land_parcels USING GIST (geometry);")
+        # Check if PostGIS extension is available before trying to install it
+        result = bind.execute(sa.text(
+            "SELECT COUNT(*) FROM pg_available_extensions WHERE name = 'postgis'"
+        ))
+        postgis_available = result.scalar() > 0
+
+        if postgis_available:
+            op.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+            op.execute("ALTER TABLE land_parcels ADD COLUMN IF NOT EXISTS geometry geometry(Polygon, 4326);")
+            op.execute("CREATE INDEX IF NOT EXISTS idx_land_parcels_geometry ON land_parcels USING GIST (geometry);")
+        else:
+            # PostGIS not available (e.g. Railway standard Postgres) — use JSON fallback
+            op.execute("ALTER TABLE land_parcels ADD COLUMN IF NOT EXISTS geometry JSONB;")
     else:
         with op.batch_alter_table("land_parcels") as batch_op:
             batch_op.add_column(sa.Column("geometry", sa.JSON(), nullable=True))
@@ -39,4 +49,3 @@ def downgrade() -> None:
     else:
         with op.batch_alter_table("land_parcels") as batch_op:
             batch_op.drop_column("geometry")
-
