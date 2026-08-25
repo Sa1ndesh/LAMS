@@ -24,12 +24,8 @@ class Settings(BaseSettings):
     SEED_ADMIN_EMAIL: str = "admin.national@lams.gov.in"
     SEED_ADMIN_PASSWORD: str = "LamsAdmin@2026"
 
-    # CORS Origins configuration
-    CORS_ORIGINS: Union[List[str], str] = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-    ]
+    # CORS Origins configuration - allow all origins for cloud deployments
+    CORS_ORIGINS: Union[List[str], str] = ["*"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
