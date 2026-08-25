@@ -187,7 +187,7 @@ async def seed_all():
             {
                 "project_code": "PROJ-UP-AIR-003",
                 "name": "Noida International Greenfield Airport Expansion",
-                "category": ProjectCategoryEnum.AIRPORT,
+                "category": ProjectCategoryEnum.URBAN_DEVELOPMENT,
                 "description": "Phase II land acquisition for runway 3 & 4 and cargo logistics terminal at Jewar.",
                 "ministry": "Ministry of Civil Aviation",
                 "implementing_agency": "YIAL / NIAL",
@@ -205,7 +205,7 @@ async def seed_all():
             {
                 "project_code": "PROJ-TN-PORT-004",
                 "name": "Ennore Deep Ocean Port Container Terminal",
-                "category": ProjectCategoryEnum.PORT,
+                "category": ProjectCategoryEnum.INDUSTRIAL_CORRIDOR,
                 "description": "Coastal acquisition for deep-draft container berth extension and rail transshipment yard.",
                 "ministry": "Ministry of Ports, Shipping and Waterways",
                 "implementing_agency": "Kamarajar Port Limited",
@@ -223,7 +223,7 @@ async def seed_all():
             {
                 "project_code": "PROJ-KA-ENRG-005",
                 "name": "Pavagada Solar Park Transmission Grid Infrastructure",
-                "category": ProjectCategoryEnum.ENERGY,
+                "category": ProjectCategoryEnum.RENEWABLE_ENERGY,
                 "description": "Green energy corridor grid sub-station expansion and ultra-high voltage power line right-of-way.",
                 "ministry": "Ministry of New and Renewable Energy",
                 "implementing_agency": "KSPDCL",
