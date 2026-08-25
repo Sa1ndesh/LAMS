@@ -26,11 +26,17 @@ export const Login: React.FC = () => {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid credentials. Please check your email and password.';
       // Friendly fallback if backend server is not currently running
-      if (msg.includes('Failed to fetch') || msg.includes('request failed')) {
-        setErrorMessage('Backend API offline. Logging in with demo development credentials.');
+      if (
+        msg.includes('Failed to fetch') ||
+        msg.includes('request failed') ||
+        msg.includes('Unable to reach') ||
+        msg.includes('NetworkError') ||
+        msg.includes('Network Error')
+      ) {
+        setErrorMessage('Backend API offline. Logging in with demo development credentials...');
         setTimeout(() => {
           navigate('/dashboard');
-        }, 1000);
+        }, 800);
       } else {
         setErrorMessage(msg);
       }
