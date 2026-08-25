@@ -1,4 +1,5 @@
 import json
+import re
 from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,6 +15,14 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://lams_user:lams_password@localhost:5432/lams_db"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_database_url(cls, v: str) -> str:
+        """Auto-convert raw postgresql:// URLs to postgresql+asyncpg:// for asyncpg driver."""
+        if isinstance(v, str) and re.match(r'^postgresql://', v):
+            return v.replace('postgresql://', 'postgresql+asyncpg://', 1)
+        return v
 
     # Security & JWT
     JWT_SECRET_KEY: str = "lams_dev_secret_key_change_in_production_2026_super_secret"
