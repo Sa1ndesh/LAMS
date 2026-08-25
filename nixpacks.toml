@@ -1,0 +1,11 @@
+[providers]
+providers = ['python']
+
+[phases.setup]
+nixPkgs = ['python311', 'gcc']
+
+[phases.install]
+cmds = ['python3 -m pip install --no-cache-dir -r backend/requirements.txt']
+
+[start]
+cmd = 'bash start.sh'
