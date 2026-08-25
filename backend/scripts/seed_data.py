@@ -31,6 +31,11 @@ from app.models import (
     PossessionStatusEnum,
     DocumentCategoryEnum,
     UserRoleEnum,
+    SocialCategoryEnum,
+    RRStatusEnum,
+    NotificationTypeEnum,
+    PaymentStatusEnum,
+    MilestoneStatusEnum,
 )
 from app.models.parcel import LandParcel
 from app.models.compensation import CompensationRecord
@@ -368,13 +373,14 @@ async def seed_all():
                 session.add(owner)
 
                 # Seed Compensation Record
+                pay_status = PaymentStatusEnum.DISBURSED if (p_idx + i) % 3 == 0 else PaymentStatusEnum.APPROVED
                 comp = CompensationRecord(
                     project_id=project.id,
                     parcel_id=parcel.id,
                     assessed_amount_inr=15000000.0 + (i * 2000000.0),
                     approved_amount_inr=15000000.0 + (i * 2000000.0),
-                    disbursed_amount_inr=10000000.0 if comp_status == CompensationStatusEnum.DISBURSED else 5000000.0,
-                    payment_status=comp_status,
+                    disbursed_amount_inr=15000000.0 + (i * 2000000.0) if pay_status == PaymentStatusEnum.DISBURSED else 5000000.0,
+                    payment_status=pay_status,
                     payment_date=date(2025, 8, 15),
                 )
                 session.add(comp)
@@ -384,12 +390,10 @@ async def seed_all():
                     project_id=project.id,
                     family_reference_id=f"FAM-{parcel_count:04d}",
                     village=project.village,
-                    head_of_family=f"Head Family {parcel_count}",
-                    family_members_count=4 + (i % 3),
-                    category="OBC" if i % 2 == 0 else "SC",
+                    category=SocialCategoryEnum.OBC if i % 2 == 0 else SocialCategoryEnum.SC,
                     is_affected=True,
                     is_displaced=True if i % 3 == 0 else False,
-                    rr_status="COMPLETED" if acq_status == ParcelAcquisitionStatusEnum.ACQUIRED else "IDENTIFIED",
+                    rr_status=RRStatusEnum.COMPLETED if acq_status == ParcelAcquisitionStatusEnum.ACQUIRED else RRStatusEnum.IDENTIFIED,
                 )
                 session.add(fam)
 
@@ -399,25 +403,25 @@ async def seed_all():
             m1 = Milestone(
                 project_id=project.id,
                 title="Section 4 Notification Issued",
-                target_date=date(2025, 2, 1),
+                stage="Notification",
+                planned_date=date(2025, 2, 1),
                 actual_date=date(2025, 2, 5),
-                status="COMPLETED",
-                progress_percentage=100,
+                status=MilestoneStatusEnum.COMPLETED,
             )
             m2 = Milestone(
                 project_id=project.id,
                 title="Section 11 Preliminary Survey Published",
-                target_date=date(2025, 6, 15),
+                stage="Survey",
+                planned_date=date(2025, 6, 15),
                 actual_date=date(2025, 6, 20),
-                status="COMPLETED",
-                progress_percentage=100,
+                status=MilestoneStatusEnum.COMPLETED,
             )
             m3 = Milestone(
                 project_id=project.id,
                 title="Section 19 Compensation Award Declaration",
-                target_date=date(2026, 1, 10),
-                status="IN_PROGRESS" if project.status != ProjectStatusEnum.COMPLETED else "COMPLETED",
-                progress_percentage=60 if project.status != ProjectStatusEnum.COMPLETED else 100,
+                stage="Award",
+                planned_date=date(2026, 1, 10),
+                status=MilestoneStatusEnum.IN_PROGRESS if project.status != ProjectStatusEnum.COMPLETED else MilestoneStatusEnum.COMPLETED,
             )
             session.add_all([m1, m2, m3])
 
@@ -426,7 +430,7 @@ async def seed_all():
                 project_id=project.id,
                 title=f"Project Setup Completed: {project.name}",
                 message=f"Project {project.project_code} initialized at stage {project.current_stage.value}.",
-                notification_type="WORKFLOW",
+                notification_type=NotificationTypeEnum.PROJECT_UPDATE,
                 is_read=False,
             )
             session.add(notif)
@@ -435,8 +439,8 @@ async def seed_all():
                 user_id=admin_user.id,
                 action="PROJECT_CREATED",
                 entity_type="PROJECT",
-                entity_id=project.id,
-                details=f"Seeded initial project {project.project_code}",
+                entity_id=str(project.id),
+                new_value={"project_code": project.project_code, "name": project.name},
             )
             session.add(audit)
 
