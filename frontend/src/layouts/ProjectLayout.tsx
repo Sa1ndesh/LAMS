@@ -35,6 +35,11 @@ export const ProjectLayout: React.FC = () => {
   const [newLng, setNewLng] = useState('77.7499');
   const [parcelError, setParcelError] = useState('');
 
+  // Lifecycle stage confirmation modal
+  const [isStageModalOpen, setIsStageModalOpen] = useState(false);
+  const [pendingStage, setPendingStage] = useState<LifecycleStage | null>(null);
+  const [stageSuccess, setStageSuccess] = useState(false);
+
   // Define Sub-tabs
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <Layers className="h-4 w-4" /> },
@@ -60,12 +65,23 @@ export const ProjectLayout: React.FC = () => {
 
   const handleStageSelect = (selectedStage: LifecycleStage) => {
     if (!canEditProject) {
-      alert('You do not have permission to advance project acquisition stage.');
+      // Show permission notice inline — no window.alert
+      setPendingStage(null);
+      setIsStageModalOpen(false);
       return;
     }
-    if (confirm(`Advance project "${project.name}" to lifecycle stage: "${selectedStage}"?`)) {
-      updateProjectStage(project.id, selectedStage);
+    setPendingStage(selectedStage);
+    setIsStageModalOpen(true);
+  };
+
+  const handleStageConfirm = () => {
+    if (pendingStage) {
+      updateProjectStage(project.id, pendingStage);
+      setStageSuccess(true);
+      setTimeout(() => setStageSuccess(false), 3000);
     }
+    setIsStageModalOpen(false);
+    setPendingStage(null);
   };
 
   const handleAddParcelSubmit = (e: React.FormEvent) => {
@@ -162,6 +178,17 @@ export const ProjectLayout: React.FC = () => {
           currentStage={project.currentStage}
           onStageSelect={handleStageSelect}
         />
+        {stageSuccess && (
+          <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold shadow-sm animate-pulse">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span>Lifecycle stage updated successfully!</span>
+          </div>
+        )}
+        {!canEditProject && (
+          <p className="text-[11px] text-amber-600 font-medium px-1">
+            ⚠️ Your current role does not have permission to change the lifecycle stage.
+          </p>
+        )}
       </div>
 
       {/* Sub-Tab Navigation Bar */}
@@ -171,6 +198,36 @@ export const ProjectLayout: React.FC = () => {
 
       {/* Sub-Route Content */}
       <Outlet context={{ project }} />
+
+      {/* Modal: Confirm Stage Advance */}
+      <Modal
+        isOpen={isStageModalOpen}
+        onClose={() => { setIsStageModalOpen(false); setPendingStage(null); }}
+        title="Advance Acquisition Stage"
+        subtitle={`Project: ${project.name} (${project.projectCode})`}
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => { setIsStageModalOpen(false); setPendingStage(null); }}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" icon={<CheckCircle2 className="h-4 w-4" />} onClick={handleStageConfirm}>
+              Confirm Stage Change
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-sm text-slate-700">
+          <p>You are about to advance the project lifecycle stage to:</p>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <span className="font-bold text-lams-secondary text-base">{pendingStage}</span>
+          </div>
+          <p className="text-xs text-lams-muted">
+            Current stage: <span className="font-semibold text-slate-800">{project.currentStage}</span>
+            <br />
+            This action will be recorded in the project audit log.
+          </p>
+        </div>
+      </Modal>
 
       {/* Modal: Register New Land Parcel */}
       <Modal

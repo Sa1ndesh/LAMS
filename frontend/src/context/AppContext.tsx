@@ -156,11 +156,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateProjectStage = async (id: string, newStage: LifecycleStage) => {
+    // Optimistic update: apply immediately to local state so the UI reflects the change right away
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, currentStage: newStage } : p)));
     try {
-      const updated = await projectsApi.updateProject(id, { currentStage: newStage });
-      setProjects((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      await projectsApi.updateProject(id, { currentStage: newStage });
     } catch {
-      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, currentStage: newStage } : p)));
+      // Backend update failed — local state already updated, no rollback needed for demo
+      console.warn('Stage update to backend failed; local state already updated.');
     }
   };
 
