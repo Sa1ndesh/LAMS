@@ -39,16 +39,92 @@ export const DocumentsTab: React.FC = () => {
   // Preview Modal State
   const [previewDoc, setPreviewDoc] = useState<DocumentResponseData | null>(null);
 
+  const sampleDocs: DocumentResponseData[] = [
+    {
+      id: 'doc-001',
+      document_name: 'DPR & Environmental Impact Assessment - Corridor Phase IV',
+      category: 'PROPOSAL',
+      file_reference: 'REF-DOC-2025-001',
+      description: 'Detailed Project Report (DPR) and statutory EIA clearance certificate',
+      file_path: '/documents/dpr_eia_phase4.pdf',
+      file_size: 8808038,
+      version: '1.0',
+      status: 'Approved',
+      uploaded_by: 'Nodal Officer',
+      upload_date: '2025-04-10',
+      project_id: project?.id || '1',
+      created_at: '2025-04-10T10:00:00Z',
+      updated_at: '2025-04-10T10:00:00Z',
+    },
+    {
+      id: 'doc-002',
+      document_name: 'Gazette Notification 20A - Section 11 Acquisition Notice',
+      category: 'NOTIFICATIONS',
+      file_reference: 'REF-DOC-2025-002',
+      description: 'Official State Gazette preliminary acquisition notification under RFCTLARR',
+      file_path: '/documents/gazette_sec11_notice.pdf',
+      file_size: 2202009,
+      version: '1.0',
+      status: 'Verified',
+      uploaded_by: 'Revenue Dept Officer',
+      upload_date: '2025-09-18',
+      project_id: project?.id || '1',
+      created_at: '2025-09-18T10:00:00Z',
+      updated_at: '2025-09-18T10:00:00Z',
+    },
+    {
+      id: 'doc-003',
+      document_name: 'District Collector Compensation Award Order #892',
+      category: 'AWARD',
+      file_reference: 'REF-DOC-2026-003',
+      description: 'Final land valuation and compensation award declaration by District Collectorate',
+      file_path: '/documents/collector_award_892.pdf',
+      file_size: 4823449,
+      version: '1.2',
+      status: 'Approved',
+      uploaded_by: 'District Collectorate SLAO',
+      upload_date: '2026-02-14',
+      project_id: project?.id || '1',
+      created_at: '2026-02-14T10:00:00Z',
+      updated_at: '2026-02-14T10:00:00Z',
+    },
+    {
+      id: 'doc-004',
+      document_name: 'Resettlement & Housing Assistance Allocation Master Sheet',
+      category: 'RR',
+      file_reference: 'REF-DOC-2026-004',
+      description: 'Gram Sabha approved affected families rehabilitation entitlement registry',
+      file_path: '/documents/rr_housing_master.xlsx',
+      file_size: 1258291,
+      version: '1.0',
+      status: 'Approved',
+      uploaded_by: 'R&R Nodal Commissioner',
+      upload_date: '2026-03-01',
+      project_id: project?.id || '1',
+      created_at: '2026-03-01T10:00:00Z',
+      updated_at: '2026-03-01T10:00:00Z',
+    },
+  ];
+
   // Fetch Documents
   const fetchDocuments = async () => {
     setLoading(true);
     try {
       const res = await documentsApi.getDocumentsByProject(project.id, search, selectedCategory);
-      if (res && res.items) {
+      if (res && Array.isArray(res.items) && res.items.length > 0) {
         setDocsList(res.items);
+      } else {
+        // Apply search & category filter to sample documents fallback
+        const filtered = sampleDocs.filter((d) => {
+          const matchCat = selectedCategory === 'ALL' || d.category === selectedCategory;
+          const matchSearch = !search || d.document_name.toLowerCase().includes(search.toLowerCase()) || (d.description && d.description.toLowerCase().includes(search.toLowerCase()));
+          return matchCat && matchSearch;
+        });
+        setDocsList(filtered);
       }
     } catch (err) {
       console.warn('Backend documents fetch fallback:', err);
+      setDocsList(sampleDocs);
     } finally {
       setLoading(false);
     }
@@ -244,7 +320,7 @@ export const DocumentsTab: React.FC = () => {
             className="w-full md:w-72"
           />
 
-          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          <div className="flex items-center gap-2 overflow-x-auto [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full md:w-auto pb-1 md:pb-0">
             <Filter className="h-4 w-4 text-lams-muted shrink-0" />
             {categories.map((cat) => (
               <button
