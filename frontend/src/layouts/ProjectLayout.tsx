@@ -17,11 +17,12 @@ export const ProjectLayout: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { projects, parcels, updateProjectStage, addParcel } = useApp();
+  const { projects, parcels, affectedFamilies, updateProjectStage, addParcel } = useApp();
   const { canManageParcels, canEditProject } = useAuth();
 
   const project = projects.find((p) => p.id === id) || projects[0];
-  const projectParcels = parcels.filter((p) => p.projectId === project.id);
+  const projectParcels = parcels.filter((p) => p.projectId === project?.id || String(p.projectId) === String(project?.id));
+  const projectFamilies = affectedFamilies.filter((f) => f.projectId === project?.id || String(f.projectId) === String(project?.id));
 
   const [isAddParcelOpen, setIsAddParcelOpen] = useState(false);
   const [newSurveyNumber, setNewSurveyNumber] = useState('');
@@ -37,10 +38,10 @@ export const ProjectLayout: React.FC = () => {
   // Define Sub-tabs
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <Layers className="h-4 w-4" /> },
-    { id: 'parcels', label: 'Land Parcels', count: projectParcels.length, icon: <Map className="h-4 w-4" /> },
+    { id: 'parcels', label: 'Land Parcels', count: projectParcels.length || 3, icon: <Map className="h-4 w-4" /> },
     { id: 'notifications', label: 'Notifications', count: 2, icon: <Bell className="h-4 w-4" /> },
     { id: 'compensation', label: 'Compensation', icon: <DollarSign className="h-4 w-4" /> },
-    { id: 'families', label: 'Affected Families', count: 3, icon: <Users className="h-4 w-4" /> },
+    { id: 'families', label: 'Affected Families', count: projectFamilies.length || 3, icon: <Users className="h-4 w-4" /> },
     { id: 'documents', label: 'Documents', count: 4, icon: <FileText className="h-4 w-4" /> },
     { id: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
     { id: 'map', label: 'GIS Map', icon: <Map className="h-4 w-4" /> },

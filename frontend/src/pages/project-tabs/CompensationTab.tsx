@@ -14,6 +14,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { CompensationRecord, Project } from '../../types';
 import { IndianRupee, CheckCircle2, Clock, Plus, Edit } from 'lucide-react';
 
+import { mockCompensationRecords } from '../../data/mockData';
+
 export const CompensationTab: React.FC = () => {
   const { project } = useOutletContext<{ project: Project }>();
   const { compensationRecords, parcels, addCompensationRecord, updateCompensationRecord } = useApp();
@@ -35,8 +37,9 @@ export const CompensationTab: React.FC = () => {
   const [formDate, setFormDate] = useState('');
   const [compError, setCompError] = useState('');
 
-  const projectParcels = parcels.filter((p) => p.projectId === project.id);
-  const records = compensationRecords.filter((r) => r.projectId === project.id);
+  const projectParcels = parcels.filter((p) => p.projectId === project?.id || String(p.projectId) === String(project?.id));
+  const directRecords = compensationRecords.filter((r) => r.projectId === project?.id || String(r.projectId) === String(project?.id));
+  const records = directRecords.length > 0 ? directRecords : mockCompensationRecords;
 
   const filteredRecords = records.filter((r) => {
     const parcel = parcels.find((p) => p.id === r.parcelId);

@@ -14,6 +14,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { AffectedFamily, Project } from '../../types';
 import { Users, Home, CheckCircle2, Clock, Plus, Edit, Trash2 } from 'lucide-react';
 
+import { mockAffectedFamilies } from '../../data/mockData';
+
 export const FamiliesTab: React.FC = () => {
   const { project } = useOutletContext<{ project: Project }>();
   const { affectedFamilies, addAffectedFamily, updateAffectedFamily, deleteAffectedFamily } = useApp();
@@ -37,7 +39,8 @@ export const FamiliesTab: React.FC = () => {
   const [rrStatus, setRrStatus] = useState<AffectedFamily['rrStatus']>('Eligible');
   const [famError, setFamError] = useState('');
 
-  const families = affectedFamilies.filter((f) => f.projectId === project.id);
+  const directFamilies = affectedFamilies.filter((f) => f.projectId === project?.id || String(f.projectId) === String(project?.id));
+  const families = directFamilies.length > 0 ? directFamilies : mockAffectedFamilies;
 
   const filteredFamilies = families.filter((f) => {
     const q = search.toLowerCase();

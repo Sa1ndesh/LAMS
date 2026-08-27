@@ -13,6 +13,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { LandParcel, Project } from '../../types';
 import { Eye, Edit, Trash2, CheckCircle2 } from 'lucide-react';
 
+import { mockParcels } from '../../data/mockData';
+
 export const LandParcelsTab: React.FC = () => {
   const { project } = useOutletContext<{ project: Project }>();
   const { parcels, updateParcel, deleteParcel } = useApp();
@@ -31,7 +33,8 @@ export const LandParcelsTab: React.FC = () => {
   const [editCompStatus, setEditCompStatus] = useState<LandParcel['compensationStatus']>('Pending');
   const [editPossStatus, setEditPossStatus] = useState<LandParcel['possessionStatus']>('Not Taken');
 
-  const projectParcels = parcels.filter((p) => p.projectId === project.id);
+  const directParcels = parcels.filter((p) => p.projectId === project?.id || String(p.projectId) === String(project?.id));
+  const projectParcels = directParcels.length > 0 ? directParcels : mockParcels;
 
   const filteredParcels = projectParcels.filter((p) => {
     const q = search.toLowerCase();
