@@ -20,6 +20,29 @@ export interface ProjectListResponseData {
   total_pages: number;
 }
 
+export const mapBackendProjectToFrontend = (raw: any): Project => {
+  if (!raw) return raw;
+  return {
+    id: raw.id || '',
+    projectCode: raw.project_code || raw.projectCode || '',
+    name: raw.name || '',
+    projectType: raw.category || raw.projectType || 'Infrastructure',
+    ministry: raw.ministry || '',
+    implementingAgency: raw.implementing_agency || raw.implementingAgency || '',
+    state: raw.state_name || raw.state || 'Karnataka',
+    district: raw.district_name || raw.district || 'Bengaluru',
+    village: raw.village || '',
+    landProposedHectares: typeof raw.land_proposed_hectares === 'number' ? raw.land_proposed_hectares : (raw.landProposedHectares || 0),
+    landAcquiredHectares: typeof raw.land_acquired_hectares === 'number' ? raw.land_acquired_hectares : (raw.landAcquiredHectares || 0),
+    budgetInr: typeof raw.budget_inr === 'number' ? raw.budget_inr : (raw.budgetInr || 0),
+    currentStage: raw.current_stage || raw.currentStage || 'Proposal',
+    startDate: raw.start_date || raw.startDate || '',
+    targetCompletionDate: raw.target_completion_date || raw.targetCompletionDate || '',
+    status: raw.status || 'ON_TRACK',
+    description: raw.description || '',
+  };
+};
+
 export const projectsApi = {
   getProjects: async (params: ProjectListParams = {}): Promise<ProjectListResponseData> => {
     const query = new URLSearchParams();
@@ -33,25 +56,35 @@ export const projectsApi = {
     if (params.page_size) query.append('page_size', params.page_size.toString());
 
     const queryString = query.toString() ? `?${query.toString()}` : '';
-    return apiClient<ProjectListResponseData>(`/projects${queryString}`);
+    const res = await apiClient<any>(`/projects${queryString}`);
+    if (res && Array.isArray(res.items)) {
+      return {
+        ...res,
+        items: res.items.map(mapBackendProjectToFrontend),
+      };
+    }
+    return res;
   },
 
   getProjectById: async (id: string): Promise<Project> => {
-    return apiClient<Project>(`/projects/${id}`);
+    const res = await apiClient<any>(`/projects/${id}`);
+    return mapBackendProjectToFrontend(res);
   },
 
   createProject: async (projectData: Partial<Project>): Promise<Project> => {
-    return apiClient<Project>('/projects', {
+    const res = await apiClient<any>('/projects', {
       method: 'POST',
       body: JSON.stringify(projectData),
     });
+    return mapBackendProjectToFrontend(res);
   },
 
   updateProject: async (id: string, projectData: Partial<Project>): Promise<Project> => {
-    return apiClient<Project>(`/projects/${id}`, {
+    const res = await apiClient<any>(`/projects/${id}`, {
       method: 'PUT',
       body: JSON.stringify(projectData),
     });
+    return mapBackendProjectToFrontend(res);
   },
 
   deleteProject: async (id: string): Promise<void> => {
